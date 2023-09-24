@@ -1,0 +1,17 @@
+{
+  "name": "safe-core-protocol-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "pkgs/*"
+  ],
+  "scripts": {
+    "contract:build": "yarn workspace contracts build",
+    "contract:test": "yarn workspace contracts test",
+    "contract:coverage": "yarn workspace contracts coverage",
+    "frontend:build": "yarn workspace web build",
+    "frontend:start": "yarn workspace web start"
+  }
+}
