@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react'
-import styled from 'styled-components'
-import { Button, Title } from '@gnosis.pm/safe-react-components'
+// import { Button, Title } from '@gnosis.pm/safe-react-components'
 import { useSafeAppsSDK } from '@gnosis.pm/safe-apps-react-sdk'
 
+/*
 const Container = styled.div`
   padding: 1rem;
   width: 100%;
@@ -12,10 +12,8 @@ const Container = styled.div`
   align-items: center;
   flex-direction: column;
 `
+*/
 
-const Link = styled.a`
-  margin-top: 8px;
-`
 /**
  * SafeAppコンポーネント
  * @returns 
@@ -25,6 +23,7 @@ const SafeApp = (): React.ReactElement => {
 
   const submitTx = useCallback(async () => {
     try {
+      // トランザクションの送金
       const { safeTxHash } = await sdk.txs.send({
         txs: [
           {
@@ -43,17 +42,15 @@ const SafeApp = (): React.ReactElement => {
   }, [safe, sdk])
 
   return (
-    <Container>
-      <Title size="md">Safe: {safe.safeAddress}</Title>
+    <div>
+      <div>Safe: {safe.safeAddress}</div>
 
-      <Button size="lg" color="primary" onClick={submitTx}>
+      <button
+        onClick={submitTx}
+      >
         Click to send a test transaction
-      </Button>
-
-      <Link href="https://github.com/gnosis/safe-apps-sdk" target="_blank" rel="noreferrer">
-        Documentation
-      </Link>
-    </Container>
+      </button>
+    </div>
   )
 }
 

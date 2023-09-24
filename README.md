@@ -31,3 +31,5 @@ Safe（セイフ）は、多数のブロックチェーンで実行されるス�
 4. [Ultimate Ethereum Hackathon Survival Guide for 2023](https://swissintech.medium.com/ultimate-ethereum-hackathon-survival-guide-for-2023-94b2b72e17c0)
 5. [サンプルアプリのGitHub](https://github.com/safe-global/safe-apps-sdk/tree/main/guides/drain-safe-app)
 6. [デモアプリ](https://5afe.github.io/safe-core-protocol-demo/)
+7. [Safe UI Kit](https://components.safe.global/?path=/docs/utils-colors--colors-sample)
+8. [Safe React Component](https://github.com/safe-global/safe-react-components)
