@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 // import { Button, Title } from '@gnosis.pm/safe-react-components'
 import { useSafeAppsSDK } from '@gnosis.pm/safe-apps-react-sdk'
 import { useSafeBalances } from './hooks/useSafeBalances';
 import BalancesTable from './components/BalancesTable';
+import { getTransferTransaction } from './api/transfers';
 
 /*
 const Container = styled.div`
@@ -23,41 +24,44 @@ const Container = styled.div`
 const SafeApp = (): React.ReactElement => {
   const { sdk, safe } = useSafeAppsSDK();
   const [balances] = useSafeBalances(sdk);
+  const [recipient, setRecipient] = React.useState('');
 
   console.log({ balances });
 
   /**
-   * submitTx funtion
+   * handleTransfer method
    */
-  const submitTx = useCallback(async () => {
-    try {
-      // トランザクションの送金
-      const { safeTxHash } = await sdk.txs.send({
-        txs: [
-          {
-            to: safe.safeAddress,
-            value: '0',
-            data: '0x',
-          },
-        ],
-      })
-      console.log({ safeTxHash })
-      const safeTx = await sdk.txs.getBySafeTxHash(safeTxHash)
-      console.log({ safeTx })
-    } catch (e) {
-      console.error(e)
-    }
-  }, [safe, sdk])
+  const handleTransfer = async (): Promise<void> => {
+    const transactions = balances.map((balance) => getTransferTransaction(balance, recipient));
+
+    // トランザクションを一括送信
+    const { safeTxHash } = await sdk.txs.send({ 
+      txs: transactions 
+    });
+
+    console.log({ safeTxHash });
+    
+    const tx = await sdk.txs.getBySafeTxHash(safeTxHash);
+    console.log({ tx });
+  };
 
   return (
     <div>
       <div>Safe: {safe.safeAddress}</div>
       <BalancesTable balances={balances} />
 
+      <textarea
+        onChange={(e) => {
+          setRecipient(e.target.value);
+        }}
+        value={recipient}
+      />
+
       <button
-        onClick={submitTx}
+        color="primary" 
+        onClick={handleTransfer}
       >
-        Click to send a test transaction
+        Send the assets
       </button>
     </div>
   )
