@@ -79,3 +79,6 @@ Safe（セイフ）は、多数のブロックチェーンで実行されるス�
 11. [Gelato App](https://relay.gelato.network/apps/create)
 12. [Relay Docs](https://docs.safe.global/safe-core-aa-sdk/relay-kit/gelato)
 13. [Gelato 1Balance](https://relay.gelato.network/balance)
+14. [Safe-AA-SDK GetStarted](https://docs.safe.global/safe-core-aa-sdk/safe-apps/get-started)
+15. [Safe Core packages](https://docs.safe.global/safe-core-aa-sdk/safe-apps/overview)
+16. [Guide: Integrating the Safe Core SDK](https://github.com/safe-global/safe-core-sdk/blob/main/guides/integrating-the-safe-core-sdk.md#deploy-safe)
