@@ -24,6 +24,47 @@ Safe（セイフ）は、多数のブロックチェーンで実行されるス�
   [0xe97583cDdF80aac5d7c4af996d7B73Ae3e4E3f13](https://mumbai.polygonscan.com/address/0xe97583cDdF80aac5d7c4af996d7B73Ae3e4E3f13)  
   [0x0268349cF927B050dD5aE919C11C139637aE2a24](https://mumbai.polygonscan.com/address/0x0268349cF927B050dD5aE919C11C139637aE2a24)
 
+### relay-kit用のサンプルコード
+
+- インストール
+
+  ```bash
+  cd relay-sample && yarn
+  ```
+
+- ガスレス+AAによるトランザクション実行(Gelatoを利用)
+
+  ```bash
+  yarn execute:sample
+  ```
+
+  実際に使用したSafeのウォレット(Base Goerli)  
+  [0x244Bc53858760844C4C2b616B29E36Eeb2cb321a](https://goerli.basescan.org/address/0x244Bc53858760844C4C2b616B29E36Eeb2cb321a)
+ 
+  実行結果
+
+  ```bash
+  Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/0xd39456ca81086f9c936b3fc5d2a34b29e63dfa75aef66b9f0253aa7eec3089a3
+  ✨  Done in 19.64s.
+  ```
+
+  ```json
+  {
+    "task":{
+      "chainId":84531,
+      "taskId":"0xd39456ca81086f9c936b3fc5d2a34b29e63dfa75aef66b9f0253aa7eec3089a3",
+      "taskState":"ExecSuccess",
+      "creationDate":"2023-09-29T10:30:15.614Z",
+      "executionDate":"2023-09-29T10:30:31.693Z","transactionHash":"0x76ca2d6e1a340903953fd99b95af8b3c6aa82e55d8588b4f407311ce52757282",
+      "blockNumber":10394902
+    }
+  }
+  ```
+
+  実際にtransferされたトランザクションの記録(Goerli Testnet)  
+
+  [0x76ca2d6e1a340903953fd99b95af8b3c6aa82e55d8588b4f407311ce52757282](https://goerli.basescan.org/tx/0x76ca2d6e1a340903953fd99b95af8b3c6aa82e55d8588b4f407311ce52757282)
+
 ### 参考文献
 1. [公式ドキュメント](https://docs.safe.global/safe-core-aa-sdk/safe-core-sdk)
 2. [Safeのdapp](https://app.safe.global/welcome?utm_source=coinbase&utm_medium=web)
@@ -33,3 +74,8 @@ Safe（セイフ）は、多数のブロックチェーンで実行されるス�
 6. [デモアプリ](https://5afe.github.io/safe-core-protocol-demo/)
 7. [Safe UI Kit](https://components.safe.global/?path=/docs/utils-colors--colors-sample)
 8. [Safe React Component](https://github.com/safe-global/safe-react-components)
+9. [Safe-global/safe-docs](https://github.com/safe-global/safe-docs)
+10. [【完全保存版】Gelatoとは](https://note.com/standenglish/n/nb7090f9ab249?magazine_key=m24ba6e70d9b1)
+11. [Gelato App](https://relay.gelato.network/apps/create)
+12. [Relay Docs](https://docs.safe.global/safe-core-aa-sdk/relay-kit/gelato)
+13. [Gelato 1Balance](https://relay.gelato.network/balance)
