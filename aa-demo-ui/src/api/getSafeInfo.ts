@@ -10,6 +10,13 @@ export type SafeInfoType = {
   owners: string[]
 }
 
+/**
+ * getSafeInfo method
+ * @param safeAddress 
+ * @param connectedChainId 
+ * @param options 
+ * @returns 
+ */
 const getSafeInfo = async (
   safeAddress: string,
   connectedChainId: string,
@@ -24,6 +31,7 @@ const getSafeInfo = async (
     throw new Error(`No transaction service for ${chain?.label} chain`)
   }
 
+  // API用のURL取得する。
   const url = `${chain?.transactionServiceUrl}/api/v1/safes/${address}/`
 
   const { data: safeInfo } = await axios.get(url, options)
