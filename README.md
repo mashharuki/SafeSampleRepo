@@ -67,6 +67,42 @@ Safe（セイフ）は、多数のブロックチェーンで実行されるス�
 
   [0x76ca2d6e1a340903953fd99b95af8b3c6aa82e55d8588b4f407311ce52757282](https://goerli.basescan.org/tx/0x76ca2d6e1a340903953fd99b95af8b3c6aa82e55d8588b4f407311ce52757282)
 
+### 任意のネットワークに対応させるためにはいくつかコントラクトをデプロイする必要あり
+
+```ts
+import { ContractNetworksConfig } from "@safe-global/protocol-kit";
+
+const chainId = await ethAdapter.getChainId();
+const contractNetworks: ContractNetworksConfig = {
+  [chainId]: {
+    safeMasterCopyAddress: "<MASTER_COPY_ADDRESS>",
+    safeProxyFactoryAddress: "<PROXY_FACTORY_ADDRESS>",
+    multiSendAddress: "<MULTI_SEND_ADDRESS>",
+    multiSendCallOnlyAddress: "<MULTI_SEND_CALL_ONLY_ADDRESS>",
+    fallbackHandlerAddress: "<FALLBACK_HANDLER_ADDRESS>",
+    signMessageLibAddress: "<SIGN_MESSAGE_LIB_ADDRESS>",
+    createCallAddress: "<CREATE_CALL_ADDRESS>",
+    simulateTxAccessorAddress: "<SIMULATE_TX_ACCESSOR_ADDRESS>",
+    safeMasterCopyAbi: "<MASTER_COPY_ABI>", // Optional. Only needed with web3.js
+    safeProxyFactoryAbi: "<PROXY_FACTORY_ABI>", // Optional. Only needed with web3.js
+    multiSendAbi: "<MULTI_SEND_ABI>", // Optional. Only needed with web3.js
+    multiSendCallOnlyAbi: "<MULTI_SEND_CALL_ONLY_ABI>", // Optional. Only needed with web3.js
+    fallbackHandlerAbi: "<FALLBACK_HANDLER_ABI>", // Optional. Only needed with web3.js
+    signMessageLibAbi: "<SIGN_MESSAGE_LIB_ABI>", // Optional. Only needed with web3.js
+    createCallAbi: "<CREATE_CALL_ABI>", // Optional. Only needed with web3.js
+    simulateTxAccessorAbi: "<SIMULATE_TX_ACCESSOR_ABI>", // Optional. Only needed with web3.js
+  },
+};
+
+const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks });
+
+const safeSdk = await Safe.create({
+  ethAdapter,
+  safeAddress,
+  contractNetworks,
+});
+```
+
 ### 参考文献
 
 1. [公式ドキュメント](https://docs.safe.global/safe-core-aa-sdk/safe-core-sdk)

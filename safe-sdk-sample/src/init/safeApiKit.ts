@@ -9,7 +9,10 @@ export const initSafeApiKit = async() => {
   const txServiceUrl = TX_SERVICE_URL;
   // create eth adapter instance
   const { 
-    ethAdapterOwner: ethAdapter 
+    ethAdapterOwner: ethAdapter,
+    safeSdkOwner1,
+    safeAddress,
+    safeSdk
   } = await initProtocolKit();
 
   const safeService = new SafeApiKit({ 
@@ -19,5 +22,14 @@ export const initSafeApiKit = async() => {
 
   console.log("safeService:", safeService);
 
-  return safeService;
+  const nonce = await safeService.getNextNonce(safeAddress);
+  console.log("safeAddress's nonce:", nonce);
+
+  return {
+    safeService,
+    ethAdapter,
+    safeSdkOwner1,
+    safeAddress,
+    safeSdk
+  };
 };
