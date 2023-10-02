@@ -1,0 +1,40 @@
+.card {
+  background-color: var(--mui-palette-info-background);
+  height: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: var(--mui-shape-borderRadius);
+  cursor: pointer;
+}
+
+.card:hover {
+  outline: 1px solid var(--mui-palette-secondary-main);
+  background-color: var(--mui-palette-secondary-background);
+}
+
+[data-theme='dark'] .card:hover {
+  outline: 1px solid var(--mui-palette-primary-main);
+  background-color: var(--mui-palette-background-light);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--mui-palette-text-secondary);
+  margin-bottom: 8px;
+}
+
+@media (max-width: 600px) {
+  .header,
+  .card {
+    width: 100%;
+  }
+}
