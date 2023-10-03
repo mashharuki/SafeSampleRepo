@@ -54,6 +54,9 @@ export const initProtocolKit = async() => {
 
   const version = await safeFactory.getSafeVersion();
   console.log("version:", version);
+  
+  const chainId = await safeFactory.getChainId();
+  console.log("chainId:", chainId);
 
   /*
   // deploy safe account
@@ -81,7 +84,8 @@ export const initProtocolKit = async() => {
   console.log("safeSdk:", safeSdk);
   const balance = await provider.getBalance(safeAddress);
   // get safe's balance
-  console.log("Safe's balance:", parseInt(balance._hex.toString(), 16))
+  console.log("Safe's balance:", parseInt(balance._hex.toString(), 16));
+  console.log(`https://app.safe.global/gor:${safeAddress}`);
 
   return {
     ethAdapterOwner,

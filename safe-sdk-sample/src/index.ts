@@ -23,10 +23,10 @@ const main = async() => {
     tx
   );
 
-  const pendingTxs = await safeService.getPendingTransactions(safeAddress);
+  const pendingTxs = (await safeService.getPendingTransactions(safeAddress)).results;
 
   console.log("pendingTxs:", pendingTxs);
-  const transaction = await safeService.getTransaction(pendingTxs.results[0].safeTxHash);
+  const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
   const hash = transaction.safeTxHash
   // sign tx
   let signature = await safeSdk.signTransactionHash(hash)
@@ -37,11 +37,18 @@ const main = async() => {
   const isValidTx = await safeSdk.isValidTransaction(transaction);
   console.log("isValidTx:", isValidTx);
 
+  // get transaction again
+  const pendingTxs2 = (await safeService.getPendingTransactions(safeAddress)).results;
+  const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
   // execute traction
-  const executeTxResponse = await safeSdk.executeTransaction(transaction)
-  const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
+  const executeTxResponse = await safeSdk.executeTransaction(transaction2, {
+    from:"0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072"
+  });
+  console.log("executeTxResponse:", executeTxResponse );
 
-  console.log("receipt:", receipt);
+  const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
+  console.log('Transaction executed:')
+  console.log(`https://goerli.basescan.org/tx/${receipt!.transactionHash}`)
 }
 
 main();
