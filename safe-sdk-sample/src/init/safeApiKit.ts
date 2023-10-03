@@ -10,7 +10,6 @@ export const initSafeApiKit = async() => {
   // create eth adapter instance
   const { 
     ethAdapterOwner: ethAdapter,
-    safeSdkOwner1,
     safeAddress,
     safeSdk
   } = await initProtocolKit();
@@ -28,7 +27,6 @@ export const initSafeApiKit = async() => {
   return {
     safeService,
     ethAdapter,
-    safeSdkOwner1,
     safeAddress,
     safeSdk
   };

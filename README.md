@@ -124,3 +124,4 @@ const safeSdk = await Safe.create({
 17. [【GitHub】gnosis-starter-kit](https://github.com/scaffold-eth/scaffold-eth/tree/gnosis-starter-kit)
 18. [Safe Ecosystem Tools](https://viewer.diagrams.net/index.html?tags=%7B%7D&target=blank&highlight=0000ff&edit=_blank&layers=1&nav=1&page-id=atRejJyS5DeNAtDboIeV&title=Safe%20Diagrams.drawio#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1WcTgdHoQttJ0K_fV8mDg-RmDZRYGe3D-%26export%3Ddownload)
 19. [【ETH Tokyo winner】Multiple access wallet](https://github.com/dallarosa/ethglobal-clarifi)
+20. [Safe Study](https://zenn.dev/kozayupapa/articles/877ca3c93fc4a9)

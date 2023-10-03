@@ -24,5 +24,7 @@ export const proposeTx = async(
 
   console.log("proposeTransaction result:", result);
 
+  // この時点で proxy Contractが作られる。
+
   return result;
 };
