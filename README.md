@@ -127,3 +127,4 @@ const safeSdk = await Safe.create({
 20. [Safe Study](https://zenn.dev/kozayupapa/articles/877ca3c93fc4a9)
 21. [pimlico lit-protocol](https://docs.pimlico.io/how-to/integrations/lit-protocol)
 22. [Safe Core API List](https://github.com/safe-global/safe-core-sdk/tree/main/packages/api-kit#api-reference)
+23. [ETH Tokyo2023 finalist SuperPlay](https://github.com/Rashmi-278/SuperPlay-ETH-Tokyo-2023)

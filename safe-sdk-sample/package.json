@@ -1,18 +1,17 @@
 {
   "name": "safe-sdk-sample",
   "version": "1.0.0",
-  "main": "./src/index.ts",
+  "main": "index.js",
   "license": "MIT",
-  "dependencies": {
-    "@safe-global/api-kit": "^1.3.1",
-    "@safe-global/protocol-kit": "^1.3.0",
-    "@safe-global/safe-core-sdk-types": "^2.3.0",
-    "dotenv": "^16.3.1",
-    "ethers": "5.7.2",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
-  },
+  "private": true,
+  "workspaces": [
+    "pkgs/*"
+  ],
   "scripts": {
-    "start": "ts-node ./src/index.ts"
+    "nft:test": "yarn workspace sample-nft test",
+    "nft:clean": "yarn workspace sample-nft clean",
+    "nft:compile": "yarn workspace sample-nft compile",
+    "nft:deploy:base-goerli": "yarn workspace sample-nft deploy:base-goerli",
+    "sample:script": "yarn workspace sample-script start"
   }
 }

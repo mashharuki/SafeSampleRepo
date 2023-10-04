@@ -24,13 +24,13 @@ const provider = new ethers.providers.JsonRpcProvider(rpc_url);
 export const initProtocolKit = async() => {
   // Initialize signers
   const owner1Signer = new ethers.Wallet(OWNER_1_PRIVATE_KEY!, provider);
-  // const owner2Signer = new ethers.Wallet(OWNER_2_PRIVATE_KEY!, provider);
+  const owner2Signer = new ethers.Wallet(OWNER_2_PRIVATE_KEY!, provider);
 
   // SafeAccount作成のための設定
   const safeAccountConfig: SafeAccountConfig = {
     owners: [
-      await owner1Signer.getAddress(),
-      // await owner2Signer.getAddress()
+      //await owner1Signer.getAddress(),
+      await owner2Signer.getAddress()
     ],
     threshold: 1,
   }
@@ -57,6 +57,14 @@ export const initProtocolKit = async() => {
   
   const chainId = await safeFactory.getChainId();
   console.log("chainId:", chainId);
+
+  const safeFactoryAddr = safeFactory.getAddress();
+  console.log("safeFactoryAddr:", safeFactoryAddr);
+
+  const predictSafeAddress = await safeFactory.predictSafeAddress(safeAccountConfig);
+  console.log("predictSafeAddress:", predictSafeAddress);
+
+  // TODO 別のコントラクトで作成したsafeコントラクトアドレスとユーザーのアドレスを紐付けてチェックする機能が必要そう。
 
   /*
   // deploy safe account
