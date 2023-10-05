@@ -14,6 +14,7 @@
     "typescript": "^5.2.2"
   },
   "scripts": {
-    "start": "ts-node ./src/index.ts"
+    "start": "ts-node ./src/index.ts",
+    "execute:mintNft": "ts-node ./src/mint-nft-script.ts"
   }
 }
