@@ -23,7 +23,7 @@ import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import { createMintNftTx, createTx, proposeTx } from './../hooks/safe';
+import { createMintNftTx, createTx } from './../hooks/safe';
 import { CHAIN_ID } from './../utils/constants';
 
 
@@ -237,40 +237,55 @@ export default function Home() {
       });
 
       // create tx data
-      const tx = await createMintNftTx(safeSdk, address!);
-      // proposetx
-      await proposeTx(
-        safeSdk,
-        safeService, 
-        address, 
-        senderAddress, 
-        tx
-      );
+      const signedSafeTx = await createMintNftTx(safeSdk, address!);
+      // GelatoRelayPack型のインスタンスを生成
+      const relayKit = new GelatoRelayPack(process.env.NEXT_PUBLIC_GELATO_RELAY_API_KEY);
 
+      // safe Contractを取得
+      const safeSingletonContract = await getSafeContract({ 
+        ethAdapter, 
+        safeVersion: await safeSdk.getContractVersion() 
+      })
+
+      // トランザクションを実行するためのデータを絵コード
+      const encodedTx = safeSingletonContract.encode('execTransaction', [
+        signedSafeTx.data.to,
+        signedSafeTx.data.value,
+        signedSafeTx.data.data,
+        signedSafeTx.data.operation,
+        signedSafeTx.data.safeTxGas,
+        signedSafeTx.data.baseGas,
+        signedSafeTx.data.gasPrice,
+        signedSafeTx.data.gasToken,
+        signedSafeTx.data.refundReceiver,
+        signedSafeTx.encodedSignatures()
+      ])
       const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
 
       addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
-      const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
-      const hash = transaction.safeTxHash
-      // sign tx
-      let signature = await safeSdk.signTransactionHash(hash)
-      // confirmation
-      await safeService.confirmTransaction(hash, signature.data)
-      
+      //const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
       // check traction
-      const isValidTx = await safeSdk.isValidTransaction(transaction);
-      addEvent(`isValidTx:${isValidTx}`);
+      //const isValidTx = await safeSdk.isValidTransaction(transaction);
+      //addEvent(`isValidTx:${isValidTx}`);
 
-      // get transaction again
-      const pendingTxs2 = (await safeService.getPendingTransactions(address!)).results;
-      const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
-      // execute traction
-      const executeTxResponse = await safeSdk.executeTransaction(transaction2);
-      addEvent(`executeTxResponse:${JSON.stringify(executeTxResponse)}`);
+      const options: MetaTransactionOptions = {
+        gasLimit: '100000',
+        isSponsored: true
+      }
 
-      const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
+      // lelayを介したトランザクション実行用のデータを生成
+      const relayTransaction: RelayTransaction = {
+        target: address!,
+        encodedTransaction: encodedTx,
+        chainId: 5,
+        options
+      };
+      
+      // トランザクションを実行
+      const response = await relayKit.relayTransaction(relayTransaction)
       addEvent('Transaction executed:')
-      addEvent(`https://goerli.basescan.org/tx/${receipt!.transactionHash}`)
+      addEvent(`executed result: ${JSON.stringify(response)}`)
+      addEvent(`Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/${response.taskId}`)
     } catch(err) {
       console.error("NFTミント中にエラーが発生",err)
     }
