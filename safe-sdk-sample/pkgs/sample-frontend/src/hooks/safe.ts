@@ -65,33 +65,46 @@ export const initProtocolKit = async() => {
   console.log("predictSafeAddress:", predictSafeAddress);
 
   // TODO 別のコントラクトで作成したsafeコントラクトアドレスとユーザーのアドレスを紐付けてチェックする機能が必要そう。
-
-  /* 
-  // deploy safe account
-  const safeSdkOwner1 = await safeFactory.deploySafe({ 
-    safeAccountConfig,
-    options: {
-      gasLimit: 5000000
-    }
+  const txServiceUrl = TX_SERVICE_URL;
+  const safeService = new SafeApiKit({ 
+    txServiceUrl, 
+    ethAdapter: ethAdapterOwner
   });
-  console.log("safeSdkOwner1:", safeSdkOwner1);
 
-  // get safe address
-  const safeAddress = await safeSdkOwner1.getAddress();
-  console.log("safeAddress:", safeAddress);
-   */
+  // 生成済みのsafeAccounts一覧を取得するメソッド
+  const safes = await safeService.getSafesByOwner(await owner1Signer.getAddress());
+  console.log("safes:", safes.safes);
 
-  // すでにsafeのスマートコントラクトウォレットアドレスを取得していればそれでインスタンスを作成
-  const safeAddress = "0xF1E16286756D0928A5C3EAff4316C396CB8dA885";
+  var safeSdkOwner1;
+  var safeAddress;
+
+  // 一つも生成されていない場合には新規で作成それ以外の場合は作成ずみのSafeAccoutをアドレスとして詰める。
+  if(safes.safes.length == 0) {
+    // deploy safe account
+    safeSdkOwner1 = await safeFactory.deploySafe({ 
+      safeAccountConfig,
+      options: {
+        gasLimit: 5000000
+      }
+    });
+    console.log("safeSdkOwner1:", safeSdkOwner1);
+
+    // get safe address
+    const safeAddress = await safeSdkOwner1.getAddress();
+    console.log("safeAddress:", safeAddress);
+  } else {
+    // すでにsafeのスマートコントラクトウォレットアドレスを取得していればそれでインスタンスを作成
+    safeAddress = safes.safes[4]
+  }
 
   // Safeのインスタンスを作成
   const safeSdk = await Safe.create({ 
     ethAdapter: ethAdapterOwner, 
-    safeAddress: safeAddress
+    safeAddress: safeAddress!
   });
 
   console.log("safeSdk:", safeSdk);
-  const balance = await provider.getBalance(safeAddress);
+  const balance = await provider.getBalance(safeAddress!);
   // get safe's balance
   console.log("Safe's balance:", parseInt(balance._hex.toString(), 16));
   console.log(`https://app.safe.global/gor:${safeAddress}`);
@@ -124,7 +137,7 @@ export const initSafeApiKit = async() => {
 
   console.log("safeService:", safeService);
 
-  const nonce = await safeService.getNextNonce(safeAddress);
+  const nonce = await safeService.getNextNonce(safeAddress!);
   console.log("safeAddress's nonce:", nonce);
 
   return {
