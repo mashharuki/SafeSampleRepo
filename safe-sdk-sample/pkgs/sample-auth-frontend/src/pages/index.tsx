@@ -4,7 +4,12 @@ import Console from "@/components/Console";
 import Header from "@/components/Header";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import { RPC_URL, TX_SERVICE_URL } from "@/utils/constants";
+import SafeApiKit from '@safe-global/api-kit';
 import { Web3AuthConfig, Web3AuthModalPack } from '@safe-global/auth-kit';
+import Safe, {
+  EthersAdapter,
+  SafeFactory,
+} from '@safe-global/protocol-kit';
 import {
   CHAIN_NAMESPACES,
   SafeEventEmitterProvider,
@@ -13,9 +18,9 @@ import {
 } from '@web3auth/base';
 import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
-import { Wallet } from "ethers";
+import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import { createMintNftTx, createTx, initSafeApiKit, proposeTx } from './../hooks/safe';
+import { createMintNftTx, createTx, proposeTx } from './../hooks/safe';
 import { CHAIN_ID } from './../utils/constants';
 
 
@@ -26,9 +31,7 @@ import { CHAIN_ID } from './../utils/constants';
 export default function Home() {
   const [account, setAccount] = useState<any | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [senderAddress, setSenderAddress] = useState<Wallet | null>(null);
-  const [safeSdk, setSafeSdk] = useState<any | null>(null);
-  const [safeService, setSafeService] = useState<any | null>(null);
+  const [senderAddress, setSenderAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<string[]>([
     `A sample application to demonstrate how to work Safe Contract.`,
@@ -49,41 +52,49 @@ export default function Home() {
   };
 
   /**
-   * createSafeAccount method
-   * @returns 
-   */
-  const createAccount = async () => {
-    setLoading(true);
-
-    // craete Safe Account
-    try {
-      const {
-        safeService,
-        safeAddress,
-        safeSdk,
-        senderAddress
-      } = await initSafeApiKit();
-
-      setAddress(safeAddress!);
-      setSafeSdk(safeSdk);
-      setSafeService(safeService);
-      setSenderAddress(senderAddress);
-    } catch(err) {
-      console.error("safeAccount作成中にエラーが発生",err)
-    }
-
-    setLoading(false);
-  };
-
-  /**
    * login method
    */
   const login = async() => {
     const authKitSignData = await web3AuthModalPack?.signIn();
-    const eoa: any = authKitSignData?.eoa;
-    const safeAddress = authKitSignData?.safes![0];
+    var eoa = authKitSignData?.eoa!;
+    var safeAddress = authKitSignData?.safes![0];
 
-    console.log('SIGN IN RESPONSE: ', authKitSignData)
+    console.log('SIGN IN RESPONSE: ', authKitSignData);
+    console.log('safeAddress: ', safeAddress);
+    console.log('eoa: ', eoa);
+
+    setLoading(true);
+    // if user don't have any safeAccount , create here
+    if(safeAddress == undefined || safeAddress == null){ 
+      // create safeSDK instance
+      const provider = new ethers.providers.Web3Provider(web3AuthModalPack?.getProvider()!);
+      var signer = provider.getSigner();
+
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signerOrProvider: signer || provider
+      });
+
+      // create factory instance
+      const safeFactory = await SafeFactory.create({ 
+        ethAdapter: ethAdapter, 
+      });
+      // craete new safe Account
+      const safeSdkOwner1 = await safeFactory.deploySafe({
+        safeAccountConfig: {
+          owners: [ 
+            eoa
+          ],
+          threshold: 1,
+        },
+        options: {
+          gasLimit: 5000000
+        }
+      });
+      // get safe address
+      safeAddress = await safeSdkOwner1.getAddress();
+    }
+    setLoading(false);
 
     const userInfo = await web3AuthModalPack!.getUserInfo();
     console.log('USER INFO: ', userInfo)
@@ -92,6 +103,7 @@ export default function Home() {
     setUserInfo(userInfo || undefined)
     setProvider(web3AuthModalPack?.getProvider() as SafeEventEmitterProvider)
     setAddress(safeAddress!)
+    setSenderAddress(eoa);
   }
 
   /**
@@ -102,6 +114,7 @@ export default function Home() {
     setProvider(null)
     setSafeAuthSignInResponse(null)
     setAddress(null)
+    setSenderAddress(null)
   }
 
   /**
@@ -117,6 +130,24 @@ export default function Home() {
     
     // send ETH 
     try {
+      // create safeSDK instance
+      const provider = new ethers.providers.Web3Provider(web3AuthModalPack?.getProvider()!);
+      var signer = provider.getSigner()
+
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signerOrProvider: signer || provider
+      })
+
+      const safeSdk = await Safe.create({
+        ethAdapter,
+        safeAddress: address!
+      })
+      const safeService = new SafeApiKit({ 
+        txServiceUrl: TX_SERVICE_URL, 
+        ethAdapter 
+      });
+
       // create tx data
       const tx = await createTx(safeSdk);
       // proposetx
@@ -124,11 +155,11 @@ export default function Home() {
         safeSdk,
         safeService, 
         address, 
-        await senderAddress?.getAddress(), 
+        senderAddress, 
         tx
       );
 
-      const pendingTxs = (await safeService.getPendingTransactions(address)).results;
+      const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
 
       addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
       const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
@@ -143,10 +174,12 @@ export default function Home() {
       addEvent(`isValidTx:${isValidTx}`);
 
       // get transaction again
-      const pendingTxs2 = (await safeService.getPendingTransactions(address)).results;
+      const pendingTxs2 = (await safeService.getPendingTransactions(address!)).results;
       const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
       // execute traction
-      const executeTxResponse = await safeSdk.executeTransaction(transaction2);
+      const executeTxResponse = await safeSdk.executeTransaction(transaction2, {
+        gasPrice: 5000000
+      });
       addEvent(`executeTxResponse:${JSON.stringify(executeTxResponse)}`);
 
       const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
@@ -169,6 +202,24 @@ export default function Home() {
     addEvent("mint NFT transaction...");
 
     try {
+      // create safeSDK instance
+      const provider = new ethers.providers.Web3Provider(web3AuthModalPack?.getProvider()!);
+      var signer = provider.getSigner()
+
+      const ethAdapter = new EthersAdapter({
+        ethers,
+        signerOrProvider: signer || provider
+      })
+
+      const safeSdk = await Safe.create({
+        ethAdapter,
+        safeAddress: address!
+      })
+      const safeService = new SafeApiKit({ 
+        txServiceUrl: TX_SERVICE_URL, 
+        ethAdapter 
+      });
+
       // create tx data
       const tx = await createMintNftTx(safeSdk, address!);
       // proposetx
@@ -176,11 +227,11 @@ export default function Home() {
         safeSdk,
         safeService, 
         address, 
-        await senderAddress?.getAddress(), 
+        senderAddress, 
         tx
       );
 
-      const pendingTxs = (await safeService.getPendingTransactions(address)).results;
+      const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
 
       addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
       const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
@@ -195,7 +246,7 @@ export default function Home() {
       addEvent(`isValidTx:${isValidTx}`);
 
       // get transaction again
-      const pendingTxs2 = (await safeService.getPendingTransactions(address)).results;
+      const pendingTxs2 = (await safeService.getPendingTransactions(address!)).results;
       const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
       // execute traction
       const executeTxResponse = await safeSdk.executeTransaction(transaction2);

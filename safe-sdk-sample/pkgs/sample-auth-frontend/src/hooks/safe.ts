@@ -4,7 +4,7 @@ import Safe, {
   SafeAccountConfig,
   SafeFactory,
 } from '@safe-global/protocol-kit';
-import { SafeTransactionDataPartial } from '@safe-global/safe-core-sdk-types';
+import { MetaTransactionData, SafeTransactionDataPartial } from '@safe-global/safe-core-sdk-types';
 import { ethers } from 'ethers';
 import { NFT_ADDRESS, RPC_URL, TX_SERVICE_URL } from '../utils/constants';
 import { abi } from './../../../sample-nft/artifacts/contracts/MyNFT.sol/MyNFT.json';
@@ -189,7 +189,7 @@ export const createTx = async(safeSdk: any,) => {
     to: '0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072',
     data: '0x',
     value: ethers.utils.parseUnits('0.0001', 'ether').toString(),
-    // gasPrice: "500000",
+    gasPrice: "500000",
   };
 
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });
@@ -209,11 +209,10 @@ export const createMintNftTx = async(
   const data = contract.encodeFunctionData("mint", [safeAddress])
   
   // create tx data
-  const safeTransactionData: SafeTransactionDataPartial = {
+  const safeTransactionData: MetaTransactionData = {
     to: NFT_ADDRESS , // NFTコントラクトのアドレス
     data: data,
     value: ethers.utils.parseUnits('0', 'ether').toString(),
-    // gasPrice: "500000",
   };
 
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });

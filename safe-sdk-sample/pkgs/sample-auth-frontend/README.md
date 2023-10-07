@@ -54,3 +54,7 @@ The application should now be running at [http://localhost:3000](http://localhos
 This demonstration app provides a great starting point for integrating self-custodial social authentication into your Ethereum DApp. By utilizing Web3Auth and UserOp.js along with Next.js, it's possible to create a more user-friendly and secure DApp experience.
 
 For further information and help, feel free to raise an issue in this repository.
+
+### メモがき
+
+Auth kit は、 goerli じゃないと動かなかった。

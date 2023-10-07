@@ -16,3 +16,8 @@ npx hardhat run scripts/deploy.ts
 
 deployed to 0x599c542e6FF0e009D929091e948d2BA510136741
 ✨ Done in 8.48s.
+
+### テスト用にデプロイした NFT コントラクトアドレス(Goerli)
+
+deployed to 0xE10E1a369e38BC25b14EA7FB9083e3911FD15eAf  
+✨ Done in 9.04s.

@@ -5,7 +5,8 @@ import { HardhatUserConfig } from "hardhat/config";
 dotenv.config();
 
 const {
-  PRIVATE_KEY
+  PRIVATE_KEY,
+  ALCHEMY_GOERLI_URL
 } = process.env;
 
 const config: HardhatUserConfig = {
@@ -16,6 +17,11 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY!],
       gasPrice: 1000000000,
     },
+    goerli: {
+      url: ALCHEMY_GOERLI_URL,
+      accounts: [PRIVATE_KEY!],
+      gasPrice: 1000000000,
+    }
   }
 };
 
