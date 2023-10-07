@@ -9,7 +9,10 @@ import { Web3AuthConfig, Web3AuthModalPack } from '@safe-global/auth-kit';
 import Safe, {
   EthersAdapter,
   SafeFactory,
+  getSafeContract
 } from '@safe-global/protocol-kit';
+import { GelatoRelayPack } from '@safe-global/relay-kit';
+import { MetaTransactionOptions, RelayTransaction } from '@safe-global/safe-core-sdk-types';
 import {
   CHAIN_NAMESPACES,
   SafeEventEmitterProvider,
@@ -149,42 +152,55 @@ export default function Home() {
       });
 
       // create tx data
-      const tx = await createTx(safeSdk);
-      // proposetx
-      await proposeTx(
-        safeSdk,
-        safeService, 
-        address, 
-        senderAddress, 
-        tx
-      );
+      const signedSafeTx = await createTx(safeSdk);
+      // GelatoRelayPack型のインスタンスを生成
+      const relayKit = new GelatoRelayPack(process.env.NEXT_PUBLIC_GELATO_RELAY_API_KEY);
 
+      // safe Contractを取得
+      const safeSingletonContract = await getSafeContract({ 
+        ethAdapter, 
+        safeVersion: await safeSdk.getContractVersion() 
+      })
+
+      // トランザクションを実行するためのデータを絵コード
+      const encodedTx = safeSingletonContract.encode('execTransaction', [
+        signedSafeTx.data.to,
+        signedSafeTx.data.value,
+        signedSafeTx.data.data,
+        signedSafeTx.data.operation,
+        signedSafeTx.data.safeTxGas,
+        signedSafeTx.data.baseGas,
+        signedSafeTx.data.gasPrice,
+        signedSafeTx.data.gasToken,
+        signedSafeTx.data.refundReceiver,
+        signedSafeTx.encodedSignatures()
+      ])
       const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
 
       addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
       const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
-      const hash = transaction.safeTxHash
-      // sign tx
-      let signature = await safeSdk.signTransactionHash(hash)
-      // confirmation
-      await safeService.confirmTransaction(hash, signature.data)
-      
       // check traction
       const isValidTx = await safeSdk.isValidTransaction(transaction);
       addEvent(`isValidTx:${isValidTx}`);
 
-      // get transaction again
-      const pendingTxs2 = (await safeService.getPendingTransactions(address!)).results;
-      const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
-      // execute traction
-      const executeTxResponse = await safeSdk.executeTransaction(transaction2, {
-        gasPrice: 5000000
-      });
-      addEvent(`executeTxResponse:${JSON.stringify(executeTxResponse)}`);
+      const options: MetaTransactionOptions = {
+        gasLimit: '100000',
+        isSponsored: true
+      }
 
-      const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
+      // lelayを介したトランザクション実行用のデータを生成
+      const relayTransaction: RelayTransaction = {
+        target: address!,
+        encodedTransaction: encodedTx,
+        chainId: 5,
+        options
+      };
+      
+      // トランザクションを実行
+      const response = await relayKit.relayTransaction(relayTransaction)
       addEvent('Transaction executed:')
-      addEvent(`https://goerli.basescan.org/tx/${receipt!.transactionHash}`)
+      addEvent(`executed result: ${JSON.stringify(response)}`)
+      addEvent(`Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/${response.taskId}`)
       //setLoading(false);
     } catch(err) {
       console.error("ETH送金中にエラーが発生",err)
@@ -278,7 +294,7 @@ export default function Home() {
         },
         uiConfig: {
           theme: 'dark',
-          loginMethodsOrder: ['google', 'facebook']
+          loginMethodsOrder: ['google', 'facebook', 'GitHub']
         }
       }
 
