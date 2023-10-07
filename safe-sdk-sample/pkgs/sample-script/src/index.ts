@@ -9,7 +9,8 @@ const main = async() => {
   const {
     safeService,
     safeAddress,
-    safeSdk
+    safeSdk,
+    senderAddress
   } = await initSafeApiKit();
 
   // create tx data
@@ -19,7 +20,7 @@ const main = async() => {
     safeSdk,
     safeService, 
     safeAddress, 
-    "0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072", 
+    senderAddress, 
     tx
   );
 
@@ -41,9 +42,7 @@ const main = async() => {
   const pendingTxs2 = (await safeService.getPendingTransactions(safeAddress)).results;
   const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
   // execute traction
-  const executeTxResponse = await safeSdk.executeTransaction(transaction2, {
-    from:"0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072"
-  });
+  const executeTxResponse = await safeSdk.executeTransaction(transaction2);
   console.log("executeTxResponse:", executeTxResponse );
 
   const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())

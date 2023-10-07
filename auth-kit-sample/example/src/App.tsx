@@ -97,6 +97,10 @@ function App() {
     }
   }, [web3AuthModalPack])
 
+  /**
+   * login method
+   * @returns 
+   */
   const login = async () => {
     if (!web3AuthModalPack) return
 

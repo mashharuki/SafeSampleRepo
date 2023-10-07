@@ -11,7 +11,8 @@ dotenv.config();
 
 const {
   OWNER_1_PRIVATE_KEY,
-  OWNER_2_PRIVATE_KEY
+  OWNER_2_PRIVATE_KEY,
+  OWNER_3_PRIVATE_KEY
 } = process.env;
 
 // base Goerli RPC
@@ -25,12 +26,14 @@ export const initProtocolKit = async() => {
   // Initialize signers
   const owner1Signer = new ethers.Wallet(OWNER_1_PRIVATE_KEY!, provider);
   const owner2Signer = new ethers.Wallet(OWNER_2_PRIVATE_KEY!, provider);
+  const owner3Signer = new ethers.Wallet(OWNER_3_PRIVATE_KEY!, provider);
 
   // SafeAccount作成のための設定
   const safeAccountConfig: SafeAccountConfig = {
     owners: [
       //await owner1Signer.getAddress(),
-      await owner2Signer.getAddress()
+      // await ownerSigner.getAddress()
+      await owner3Signer.getAddress()
     ],
     threshold: 1,
   }
@@ -38,7 +41,7 @@ export const initProtocolKit = async() => {
   // create EtherAdapter instance
   const ethAdapterOwner = new EthersAdapter({
     ethers,
-    signerOrProvider: owner1Signer
+    signerOrProvider: owner3Signer
   });
 
   console.log("ethAdapterOwner:", ethAdapterOwner);
@@ -48,8 +51,8 @@ export const initProtocolKit = async() => {
   // create factory instance
   const safeFactory = await SafeFactory.create({ 
     ethAdapter: ethAdapterOwner, 
-    safeVersion: safeVersion,
-    isL1SafeMasterCopy: false
+    //safeVersion: safeVersion,
+    //isL1SafeMasterCopy: false
   });
 
   const version = await safeFactory.getSafeVersion();
@@ -66,7 +69,7 @@ export const initProtocolKit = async() => {
 
   // TODO 別のコントラクトで作成したsafeコントラクトアドレスとユーザーのアドレスを紐付けてチェックする機能が必要そう。
 
-  /*
+  /*  */
   // deploy safe account
   const safeSdkOwner1 = await safeFactory.deploySafe({ 
     safeAccountConfig,
@@ -79,14 +82,14 @@ export const initProtocolKit = async() => {
   // get safe address
   const safeAddress = await safeSdkOwner1.getAddress();
   console.log("safeAddress:", safeAddress);
-   */
+
+  
 
   // すでにsafeのスマートコントラクトウォレットアドレスを取得していればそれでインスタンスを作成
-  const safeAddress = "0xF1E16286756D0928A5C3EAff4316C396CB8dA885";
+  // const safeAddress = "0xF1E16286756D0928A5C3EAff4316C396CB8dA885";
   const safeSdk = await Safe.create({ 
     ethAdapter: ethAdapterOwner, 
     safeAddress: safeAddress
-    // safeAddress: safeAddress 
   });
 
   console.log("safeSdk:", safeSdk);
@@ -98,6 +101,7 @@ export const initProtocolKit = async() => {
   return {
     ethAdapterOwner,
     safeAddress,
-    safeSdk
+    safeSdk,
+    senderAddress: owner1Signer
   };
 };
