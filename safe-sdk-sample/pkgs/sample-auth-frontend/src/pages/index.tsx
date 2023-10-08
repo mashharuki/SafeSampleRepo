@@ -178,10 +178,10 @@ export default function Home() {
       const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
 
       addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
-      const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
+      //const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
       // check traction
-      const isValidTx = await safeSdk.isValidTransaction(transaction);
-      addEvent(`isValidTx:${isValidTx}`);
+      //const isValidTx = await safeSdk.isValidTransaction(transaction);
+      //addEvent(`isValidTx:${isValidTx}`);
 
       const options: MetaTransactionOptions = {
         gasLimit: '100000',
@@ -377,11 +377,11 @@ export default function Home() {
                         {/* send Button */}
                         <ActionButton
                           name={"Send ETH"}
-                          description={"Simple transfer of 0.0005 ETH to an arbitrary address with gas sponsored."}
+                          description={"Simple transfer of 0.0001 ETH to an arbitrary address with gas sponsored."}
                           onClickFunction={async() =>
                             await sendTransaction(
                               "0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072",
-                              "0.0005"
+                              "0.0001"
                             )}
                         />
                         {/* mint NFT Button */}
