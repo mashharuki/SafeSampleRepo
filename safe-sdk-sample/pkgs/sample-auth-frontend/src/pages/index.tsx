@@ -4,15 +4,7 @@ import Console from "@/components/Console";
 import Header from "@/components/Header";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import { RPC_URL, TX_SERVICE_URL } from "@/utils/constants";
-import SafeApiKit from '@safe-global/api-kit';
 import { Web3AuthConfig, Web3AuthModalPack } from '@safe-global/auth-kit';
-import Safe, {
-  EthersAdapter,
-  SafeFactory,
-  getSafeContract
-} from '@safe-global/protocol-kit';
-import { GelatoRelayPack } from '@safe-global/relay-kit';
-import { MetaTransactionOptions, RelayTransaction } from '@safe-global/safe-core-sdk-types';
 import {
   CHAIN_NAMESPACES,
   SafeEventEmitterProvider,
@@ -23,7 +15,7 @@ import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import { createMintNftTx, createTx } from './../hooks/safe';
+import { createSafe, mintNftTx, sendEthTx } from './../hooks/safe';
 import { CHAIN_ID } from './../utils/constants';
 
 
@@ -72,30 +64,8 @@ export default function Home() {
       // create safeSDK instance
       const provider = new ethers.providers.Web3Provider(web3AuthModalPack?.getProvider()!);
       var signer = provider.getSigner();
-
-      const ethAdapter = new EthersAdapter({
-        ethers,
-        signerOrProvider: signer || provider
-      });
-
-      // create factory instance
-      const safeFactory = await SafeFactory.create({ 
-        ethAdapter: ethAdapter, 
-      });
-      // craete new safe Account
-      const safeSdkOwner1 = await safeFactory.deploySafe({
-        safeAccountConfig: {
-          owners: [ 
-            eoa
-          ],
-          threshold: 1,
-        },
-        options: {
-          gasLimit: 5000000
-        }
-      });
-      // get safe address
-      safeAddress = await safeSdkOwner1.getAddress();
+      // create new safe address
+      safeAddress = await createSafe(provider, signer, eoa);
     }
     setLoading(false);
 
@@ -127,77 +97,16 @@ export default function Home() {
    */
   const sendTransaction = async (recipient: string, amount: string) => {
     setEvents([]);
-
     //setLoading(true);
     addEvent("Sending transaction...");
     
-    // send ETH 
     try {
       // create safeSDK instance
       const provider = new ethers.providers.Web3Provider(web3AuthModalPack?.getProvider()!);
       var signer = provider.getSigner()
-
-      const ethAdapter = new EthersAdapter({
-        ethers,
-        signerOrProvider: signer || provider
-      })
-
-      const safeSdk = await Safe.create({
-        ethAdapter,
-        safeAddress: address!
-      })
-      const safeService = new SafeApiKit({ 
-        txServiceUrl: TX_SERVICE_URL, 
-        ethAdapter 
-      });
-
-      // create tx data
-      const signedSafeTx = await createTx(safeSdk);
-      // GelatoRelayPack型のインスタンスを生成
-      const relayKit = new GelatoRelayPack(process.env.NEXT_PUBLIC_GELATO_RELAY_API_KEY);
-
-      // safe Contractを取得
-      const safeSingletonContract = await getSafeContract({ 
-        ethAdapter, 
-        safeVersion: await safeSdk.getContractVersion() 
-      })
-
-      // トランザクションを実行するためのデータを絵コード
-      const encodedTx = safeSingletonContract.encode('execTransaction', [
-        signedSafeTx.data.to,
-        signedSafeTx.data.value,
-        signedSafeTx.data.data,
-        signedSafeTx.data.operation,
-        signedSafeTx.data.safeTxGas,
-        signedSafeTx.data.baseGas,
-        signedSafeTx.data.gasPrice,
-        signedSafeTx.data.gasToken,
-        signedSafeTx.data.refundReceiver,
-        signedSafeTx.encodedSignatures()
-      ])
-      const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
-
-      addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
-      //const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
-      // check traction
-      //const isValidTx = await safeSdk.isValidTransaction(transaction);
-      //addEvent(`isValidTx:${isValidTx}`);
-
-      const options: MetaTransactionOptions = {
-        gasLimit: '100000',
-        isSponsored: true
-      }
-
-      // lelayを介したトランザクション実行用のデータを生成
-      const relayTransaction: RelayTransaction = {
-        target: address!,
-        encodedTransaction: encodedTx,
-        chainId: 5,
-        options
-      };
       
       // トランザクションを実行
-      const response = await relayKit.relayTransaction(relayTransaction)
+      const response = await sendEthTx(signer, provider, address!, recipient, amount);
       addEvent('Transaction executed:')
       addEvent(`executed result: ${JSON.stringify(response)}`)
       addEvent(`Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/${response.taskId}`)
@@ -222,67 +131,9 @@ export default function Home() {
       const provider = new ethers.providers.Web3Provider(web3AuthModalPack?.getProvider()!);
       var signer = provider.getSigner()
 
-      const ethAdapter = new EthersAdapter({
-        ethers,
-        signerOrProvider: signer || provider
-      })
+      // NFTをミントする。
+      const response = await mintNftTx(signer, provider, address!);
 
-      const safeSdk = await Safe.create({
-        ethAdapter,
-        safeAddress: address!
-      })
-      const safeService = new SafeApiKit({ 
-        txServiceUrl: TX_SERVICE_URL, 
-        ethAdapter 
-      });
-
-      // create tx data
-      const signedSafeTx = await createMintNftTx(safeSdk, address!);
-      // GelatoRelayPack型のインスタンスを生成
-      const relayKit = new GelatoRelayPack(process.env.NEXT_PUBLIC_GELATO_RELAY_API_KEY);
-
-      // safe Contractを取得
-      const safeSingletonContract = await getSafeContract({ 
-        ethAdapter, 
-        safeVersion: await safeSdk.getContractVersion() 
-      })
-
-      // トランザクションを実行するためのデータを絵コード
-      const encodedTx = safeSingletonContract.encode('execTransaction', [
-        signedSafeTx.data.to,
-        signedSafeTx.data.value,
-        signedSafeTx.data.data,
-        signedSafeTx.data.operation,
-        signedSafeTx.data.safeTxGas,
-        signedSafeTx.data.baseGas,
-        signedSafeTx.data.gasPrice,
-        signedSafeTx.data.gasToken,
-        signedSafeTx.data.refundReceiver,
-        signedSafeTx.encodedSignatures()
-      ])
-      const pendingTxs = (await safeService.getPendingTransactions(address!)).results;
-
-      addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
-      //const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
-      // check traction
-      //const isValidTx = await safeSdk.isValidTransaction(transaction);
-      //addEvent(`isValidTx:${isValidTx}`);
-
-      const options: MetaTransactionOptions = {
-        gasLimit: '100000',
-        isSponsored: true
-      }
-
-      // lelayを介したトランザクション実行用のデータを生成
-      const relayTransaction: RelayTransaction = {
-        target: address!,
-        encodedTransaction: encodedTx,
-        chainId: 5,
-        options
-      };
-      
-      // トランザクションを実行
-      const response = await relayKit.relayTransaction(relayTransaction)
       addEvent('Transaction executed:')
       addEvent(`executed result: ${JSON.stringify(response)}`)
       addEvent(`Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/${response.taskId}`)
