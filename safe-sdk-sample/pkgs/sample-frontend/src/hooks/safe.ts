@@ -97,7 +97,7 @@ export const initProtocolKit = async() => {
     console.log("safeAddress:", safeAddress);
   } else {
     // すでにsafeのスマートコントラクトウォレットアドレスを取得していればそれでインスタンスを作成
-    safeAddress = safes.safes[4]
+    safeAddress = safes.safes[0]
   }
 
   // Safeのインスタンスを作成
@@ -195,8 +195,10 @@ export const createSendTx = async(safeSdk: any, recipient: string, amount: strin
   };
 
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });
+  // トランザクションを署名
+  const signedSafeTx = await safeSdk.signTransaction(safeTransaction)
 
-  return safeTransaction;
+  return signedSafeTx;
 }
 
 /**
@@ -219,8 +221,10 @@ const createMintNftTx = async(
   };
 
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });
+  // トランザクションを署名
+  const signedSafeTx = await safeSdk.signTransaction(safeTransaction)
 
-  return safeTransaction;
+  return signedSafeTx;
 }
 
 /**
