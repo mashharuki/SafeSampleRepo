@@ -4,7 +4,7 @@ import Console from "@/components/Console";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import { Wallet } from "ethers";
 import { useState } from "react";
-import { createMintNftTx, createTx, initSafeApiKit, proposeTx } from './../hooks/safe';
+import { initSafeApiKit, mintNftTx, sendEthTx } from './../hooks/safe';
 
 /**
  * Home Component
@@ -45,7 +45,7 @@ export default function Home() {
         senderAddress
       } = await initSafeApiKit();
 
-      setAddress(safeAddress);
+      setAddress(safeAddress!);
       setSafeSdk(safeSdk);
       setSafeService(safeService);
       setSenderAddress(senderAddress);
@@ -67,43 +67,13 @@ export default function Home() {
     //setLoading(true);
     addEvent("Sending transaction...");
     
-    // send ETH 
     try {
-      // create tx data
-      const tx = await createTx(safeSdk);
-      // proposetx
-      await proposeTx(
-        safeSdk,
-        safeService, 
-        address, 
-        await senderAddress?.getAddress(), 
-        tx
-      );
-
-      const pendingTxs = (await safeService.getPendingTransactions(address)).results;
-
-      addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
-      const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
-      const hash = transaction.safeTxHash
-      // sign tx
-      let signature = await safeSdk.signTransactionHash(hash)
-      // confirmation
-      await safeService.confirmTransaction(hash, signature.data)
+      // send ETH 
+      const response = await sendEthTx(address,recipient, amount );
       
-      // check traction
-      const isValidTx = await safeSdk.isValidTransaction(transaction);
-      addEvent(`isValidTx:${isValidTx}`);
-
-      // get transaction again
-      const pendingTxs2 = (await safeService.getPendingTransactions(address)).results;
-      const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
-      // execute traction
-      const executeTxResponse = await safeSdk.executeTransaction(transaction2);
-      addEvent(`executeTxResponse:${JSON.stringify(executeTxResponse)}`);
-
-      const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
       addEvent('Transaction executed:')
-      addEvent(`https://goerli.basescan.org/tx/${receipt!.transactionHash}`)
+      addEvent(`executed result: ${JSON.stringify(response)}`)
+      addEvent(`Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/${response.taskId}`)
       //setLoading(false);
     } catch(err) {
       console.error("ETH送金中にエラーが発生",err)
@@ -121,41 +91,13 @@ export default function Home() {
     addEvent("mint NFT transaction...");
 
     try {
-      // create tx data
-      const tx = await createMintNftTx(safeSdk, address!);
-      // proposetx
-      await proposeTx(
-        safeSdk,
-        safeService, 
-        address, 
-        await senderAddress?.getAddress(), 
-        tx
-      );
+      // mint NFT tx
+      const response = await mintNftTx(address);
 
-      const pendingTxs = (await safeService.getPendingTransactions(address)).results;
-
-      addEvent(`pendingTxs:${JSON.stringify(pendingTxs)}`);
-      const transaction = await safeService.getTransaction(pendingTxs[0].safeTxHash);
-      const hash = transaction.safeTxHash
-      // sign tx
-      let signature = await safeSdk.signTransactionHash(hash)
-      // confirmation
-      await safeService.confirmTransaction(hash, signature.data)
-      
-      // check traction
-      const isValidTx = await safeSdk.isValidTransaction(transaction);
-      addEvent(`isValidTx:${isValidTx}`);
-
-      // get transaction again
-      const pendingTxs2 = (await safeService.getPendingTransactions(address)).results;
-      const transaction2 = await safeService.getTransaction(pendingTxs2[0].safeTxHash);
-      // execute traction
-      const executeTxResponse = await safeSdk.executeTransaction(transaction2);
-      addEvent(`executeTxResponse:${JSON.stringify(executeTxResponse)}`);
-
-      const receipt = executeTxResponse.transactionResponse && (await executeTxResponse.transactionResponse.wait())
       addEvent('Transaction executed:')
-      addEvent(`https://goerli.basescan.org/tx/${receipt!.transactionHash}`)
+      addEvent(`executed result: ${JSON.stringify(response)}`)
+      addEvent(`Relay Transaction Task ID: https://relay.gelato.digital/tasks/status/${response.taskId}`)
+      
     } catch(err) {
       console.error("NFTミント中にエラーが発生",err)
     }
@@ -192,7 +134,7 @@ export default function Home() {
                         onClickFunction={async() =>
                           await sendTransaction(
                             "0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072",
-                            "0.0005"
+                            "0.00001"
                           )}
                       />
                       {/* mint NFT Button */}

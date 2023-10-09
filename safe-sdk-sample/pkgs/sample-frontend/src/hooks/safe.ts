@@ -3,8 +3,10 @@ import Safe, {
   EthersAdapter,
   SafeAccountConfig,
   SafeFactory,
+  getSafeContract
 } from '@safe-global/protocol-kit';
-import { SafeTransactionDataPartial } from '@safe-global/safe-core-sdk-types';
+import { GelatoRelayPack } from '@safe-global/relay-kit';
+import { MetaTransactionData, MetaTransactionOptions, OperationType, RelayTransaction } from '@safe-global/safe-core-sdk-types';
 import { ethers } from 'ethers';
 import { NFT_ADDRESS, RPC_URL, TX_SERVICE_URL } from '../utils/constants';
 import { abi } from './../../../sample-nft/artifacts/contracts/MyNFT.sol/MyNFT.json';
@@ -153,7 +155,7 @@ export const initSafeApiKit = async() => {
 /**
  * 送信用のトランザクションデータをpropseするためのメソッド
  */
-export const proposeTx = async(
+const proposeTx = async(
   safeSdk: any,
   safeService: any,
   safeAddress: any,
@@ -182,14 +184,14 @@ export const proposeTx = async(
 /**
  * 送信用のトランザクションデータを作成するためのメソッド
  */
-export const createTx = async(safeSdk: any,) => {
+export const createSendTx = async(safeSdk: any, recipient: string, amount: string) => {
   
   // create tx data
-  const safeTransactionData: SafeTransactionDataPartial = {
-    to: '0x51908F598A5e0d8F1A3bAbFa6DF76F9704daD072',
+  const safeTransactionData: MetaTransactionData = {
+    to: recipient,
     data: '0x',
-    value: ethers.utils.parseUnits('0.0001', 'ether').toString(),
-    // gasPrice: "500000",
+    value: ethers.utils.parseUnits(amount, 'ether').toString(),
+    operation: OperationType.Call
   };
 
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });
@@ -200,7 +202,7 @@ export const createTx = async(safeSdk: any,) => {
 /**
  * NFT発行用のトランザクションデータを作成するためのメソッド
  */
-export const createMintNftTx = async(
+const createMintNftTx = async(
   safeSdk: any, 
   safeAddress:string
 ) => {
@@ -209,14 +211,140 @@ export const createMintNftTx = async(
   const data = contract.encodeFunctionData("mint", [safeAddress])
   
   // create tx data
-  const safeTransactionData: SafeTransactionDataPartial = {
+  const safeTransactionData: MetaTransactionData = {
     to: NFT_ADDRESS , // NFTコントラクトのアドレス
     data: data,
     value: ethers.utils.parseUnits('0', 'ether').toString(),
-    // gasPrice: "500000",
+    operation: OperationType.Call
   };
 
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });
 
   return safeTransaction;
 }
+
+/**
+ * ネイティブトークンを送金するメソッド
+ */
+export const sendEthTx = async(
+  safeAddress: any,
+  recipient: string, 
+  amount: string
+) => {
+  const owner1Signer = new ethers.Wallet(process.env.NEXT_PUBLIC_OWNER_1_PRIVATE_KEY!, provider);
+
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: owner1Signer || provider
+  })
+
+  const safeSdk = await Safe.create({
+    ethAdapter,
+    safeAddress: safeAddress
+  })
+
+  // create tx data
+  const signedSafeTx = await createSendTx(safeSdk, recipient, amount);
+  // GelatoRelayPack型のインスタンスを生成
+  const relayKit = new GelatoRelayPack(process.env.NEXT_PUBLIC_GELATO_RELAY_API_KEY);
+
+  // safe Contractを取得
+  const safeSingletonContract = await getSafeContract({ 
+    ethAdapter, 
+    safeVersion: await safeSdk.getContractVersion() 
+  })
+
+  // トランザクションを実行するためのデータを絵コード
+  const encodedTx = safeSingletonContract.encode('execTransaction', [
+    signedSafeTx.data.to,
+    signedSafeTx.data.value,
+    signedSafeTx.data.data,
+    signedSafeTx.data.operation,
+    signedSafeTx.data.safeTxGas,
+    signedSafeTx.data.baseGas,
+    signedSafeTx.data.gasPrice,
+    signedSafeTx.data.gasToken,
+    signedSafeTx.data.refundReceiver,
+    signedSafeTx.encodedSignatures()
+  ])
+  
+  const options: MetaTransactionOptions = {
+    gasLimit: '100000',
+    isSponsored: true
+  }
+
+  // lelayを介したトランザクション実行用のデータを生成
+  const relayTransaction: RelayTransaction = {
+    target: safeAddress,
+    encodedTransaction: encodedTx,
+    chainId: 5,
+    options
+  };
+  
+  // トランザクションを実行
+  const response = await relayKit.relayTransaction(relayTransaction);
+
+  return response;
+};
+
+/**
+ * NFTをミントするメソッド
+ */
+export const mintNftTx = async(
+  safeAddress: any,
+) => {
+  const owner1Signer = new ethers.Wallet(process.env.NEXT_PUBLIC_OWNER_1_PRIVATE_KEY!, provider);
+
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: owner1Signer || provider
+  })
+
+  const safeSdk = await Safe.create({
+    ethAdapter,
+    safeAddress: safeAddress
+  })
+
+  // create tx data
+  const signedSafeTx = await createMintNftTx(safeSdk, safeAddress);
+  // GelatoRelayPack型のインスタンスを生成
+  const relayKit = new GelatoRelayPack(process.env.NEXT_PUBLIC_GELATO_RELAY_API_KEY);
+
+  // safe Contractを取得
+  const safeSingletonContract = await getSafeContract({ 
+    ethAdapter, 
+    safeVersion: await safeSdk.getContractVersion() 
+  })
+
+  // トランザクションを実行するためのデータを絵コード
+  const encodedTx = safeSingletonContract.encode('execTransaction', [
+    signedSafeTx.data.to,
+    signedSafeTx.data.value,
+    signedSafeTx.data.data,
+    signedSafeTx.data.operation,
+    signedSafeTx.data.safeTxGas,
+    signedSafeTx.data.baseGas,
+    signedSafeTx.data.gasPrice,
+    signedSafeTx.data.gasToken,
+    signedSafeTx.data.refundReceiver,
+    signedSafeTx.encodedSignatures()
+  ])
+  
+  const options: MetaTransactionOptions = {
+    gasLimit: '100000',
+    isSponsored: true
+  }
+
+  // lelayを介したトランザクション実行用のデータを生成
+  const relayTransaction: RelayTransaction = {
+    target: safeAddress,
+    encodedTransaction: encodedTx,
+    chainId: 5,
+    options
+  };
+  
+  // トランザクションを実行
+  const response = await relayKit.relayTransaction(relayTransaction);
+
+  return response;
+};
