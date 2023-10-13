@@ -190,6 +190,9 @@ export const createSendTx = async(safeSdk: any, recipient: string, amount: strin
     operation: OperationType.Call
   };
 
+  // 理想は署名までlit側でやる。
+  // 署名済みのやつを作る。
+
   const safeTransaction = await safeSdk.createTransaction({ safeTransactionData });
   // トランザクションを署名
   const signedSafeTx = await safeSdk.signTransaction(safeTransaction)
